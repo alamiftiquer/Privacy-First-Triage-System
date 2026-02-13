@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Support Portal</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 400px; }
+        h2 { color: #2c3e50; margin-bottom: 20px; text-align: center; }
+        input, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background-color: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; transition: background 0.3s; }
+        button:hover { background-color: #2980b9; }
+        .result { margin-top: 15px; padding: 10px; border-radius: 5px; text-align: center; display: none; }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>📝 Submit Secure Ticket</h2>
+        <p style="text-align: center; font-size: 0.9em; color: #666;">Data processed locally. No cloud uploads.</p>
+        
+        <input type="email" id="email" placeholder="Your Email Address">
+        <textarea id="desc" rows="4" placeholder="Describe your issue..."></textarea>
+        <button onclick="submitTicket()">Submit Securely</button>
+
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        async function submitTicket() {
+            const email = document.getElementById('email').value;
+            const desc = document.getElementById('desc').value;
+            const resDiv = document.getElementById('result');
+
+            if(!email || !desc) {
+                alert("Please fill in all fields");
+                return;
+            }
+
+            resDiv.style.display = 'none';
+
+            try {
+                // Connects to your local Python server
+                const response = await fetch('http://127.0.0.1:5000/api/create_ticket', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email, description: desc })
+                });
+
+                const data = await response.json();
+
+                if(response.ok) {
+                    resDiv.className = 'result success';
+                    resDiv.innerHTML = `<strong>Success!</strong><br>AI Analysis: ${data.sentiment.toUpperCase()}`;
+                    resDiv.style.display = 'block';
+                    document.getElementById('desc').value = ""; // Clear box
+                } else {
+                    throw new Error("Server Error");
+                }
+            } catch (err) {
+                resDiv.className = 'result error';
+                resDiv.innerText = "Error: Is the Python server running?";
+                resDiv.style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>

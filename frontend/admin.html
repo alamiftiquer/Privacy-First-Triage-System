@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #ecf0f1; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        h1 { color: #2c3e50; }
+        button { padding: 10px 20px; background-color: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background-color: #2ecc71; }
+        
+        table { width: 100%; background: white; border-collapse: collapse; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #34495e; color: white; }
+        tr:hover { background-color: #f8f9fa; }
+        
+        .badge { padding: 5px 10px; border-radius: 15px; font-size: 12px; font-weight: bold; color: white; text-transform: uppercase; }
+        .negative { background-color: #e74c3c; } /* Red */
+        .positive { background-color: #27ae60; } /* Green */
+        .neutral { background-color: #95a5a6; }  /* Grey */
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🛡️ Local Incident Dashboard</h1>
+        <button onclick="loadTickets()">Refresh Data</button>
+    </div>
+
+    <table id="ticketTable">
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th>Email</th>
+                <th>Issue</th>
+                <th>AI Sentiment</th>
+                <th>Tags</th>
+            </tr>
+        </thead>
+        <tbody>
+            </tbody>
+    </table>
+
+    <script>
+        async function loadTickets() {
+            try {
+                const response = await fetch('http://127.0.0.1:5000/api/get_tickets');
+                const tickets = await response.json();
+                
+                const tbody = document.querySelector("#ticketTable tbody");
+                tbody.innerHTML = ""; // Clear existing
+
+                tickets.forEach(ticket => {
+                    // Create Badge Color
+                    let badgeClass = "neutral";
+                    if(ticket.sentiment === "negative") badgeClass = "negative";
+                    if(ticket.sentiment === "positive") badgeClass = "positive";
+
+                    // Format Date
+                    const date = new Date(ticket.timestamp).toLocaleString();
+
+                    const row = `
+                        <tr>
+                            <td>${date}</td>
+                            <td>${ticket.email}</td>
+                            <td>${ticket.description}</td>
+                            <td><span class="badge ${badgeClass}">${ticket.sentiment}</span></td>
+                            <td><small>${ticket.tags.join(", ")}</small></td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+            } catch (err) {
+                alert("Could not load data. Ensure 'app.py' is running!");
+            }
+        }
+
+        // Load data on page open
+        loadTickets();
+    </script>
+</body>
+</html>
